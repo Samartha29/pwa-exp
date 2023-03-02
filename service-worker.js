@@ -1,44 +1,41 @@
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(function(registration) {
-        console.log('Service worker registered with scope: ', registration.scope);
-      }, function(err) {
-        console.log('Service worker registration failed: ', err);
-      });
-  });
-}
+self.addEventListener('fetch', event => {
+  console.log('Fetch event triggered:', event.request.url);
 
-var CACHE_NAME = 'my-ecommerce-pwa-cache';
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          console.log('Cache hit:', event.request.url);
+          return response;
+        }
 
-var urlsToCache = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/app.js',
-  '/images/logo.png'
-];
-
-self.addEventListener('install', function(event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function(cache) {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        console.log('Cache miss:', event.request.url);
+        return fetch(event.request);
+      })
+      .catch(error => {
+        console.log('Fetch error:', error);
       })
   );
 });
 
-self.addEventListener('activate', function(event) {
-  event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.filter(function(cacheName) {
-          return cacheName !== CACHE_NAME;
-        }).map(function(cacheName) {
-          return caches.delete(cacheName);
-        })
-      );
-    })
-  );
+self.addEventListener('push', event => {
+  console.log('Push event triggered:', event.data.text());
+
+  const title = 'Push Notification';
+  const options = {
+    body: event.data.text(),
+    icon: 'images/icon.png'
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('sync', event => {
+  console.log('Sync event triggered:', event.tag);
+
+  if (event.tag === 'sync-example') {
+    event.waitUntil(
+      // Perform sync operation here
+    );
+  }
 });
