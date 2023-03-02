@@ -1,3 +1,11 @@
+if ('Notification' in window) {
+  Notification.requestPermission().then(function(permission) {
+    if (permission === 'granted') {
+      // show notification
+    }
+  });
+}
+
 self.addEventListener('fetch', event => {
   console.log('Fetch event triggered:', event.request.url);
 
